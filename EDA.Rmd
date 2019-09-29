@@ -1,0 +1,245 @@
+---
+title: "EDA"
+author: "Matheus Leal"
+date: "28 de setembro de 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(hrbrthemes)
+library(plotly)
+```
+
+```{r}
+notas_gerais <- read_csv("notas_gerais.csv")
+```
+
+```{r}
+notas_com_diferencas <- notas_gerais %>% 
+  mutate(provas_labs = media_provas - media_labs,
+         provas_projeto = media_provas - projeto,
+         projeto_labs = projeto - media_labs,
+         provas_praticas_vs_teoricas = media_provas - p2)
+```
+
+```{r echo=FALSE}
+p <- notas_com_diferencas %>% ggplot(aes(periodo,
+                        media_labs, 
+                        color=periodo,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+```{r echo=FALSE}
+p <- notas_com_diferencas %>% ggplot(aes(periodo,
+                        media_provas, 
+                        color=periodo,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+```{r echo=FALSE}
+p <- notas_com_diferencas %>% ggplot(aes(periodo,
+                        projeto, 
+                        color=periodo,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+
+```{r}
+p <- plot_ly(
+  notas_com_diferencas, x = ~media_provas, y = ~p2,
+  color = ~media_provas
+)
+
+p
+
+```
+
+
+```{r}
+p <- plot_ly(
+  notas_com_diferencas, x = ~media_provas, y = ~media_labs,
+  color = ~media_provas
+) 
+
+p
+
+```
+
+
+```{r}
+p <- plot_ly(
+  notas_com_diferencas, x = ~media_provas, y = ~projeto,
+  color = ~media_provas
+) 
+
+p
+
+```
+
+
+```{r}
+p <- plot_ly(
+  notas_com_diferencas, x = ~media_labs, y = ~p2,
+  color = ~media_labs
+) 
+
+p
+
+```
+
+```{r}
+p <- plot_ly(
+  notas_com_diferencas, x = ~media_labs, y = ~projeto,
+  color = ~media_labs
+) 
+
+p
+
+```
+
+
+```{r}
+p <- plot_ly(
+  notas_com_diferencas, x = ~projeto, y = ~p2,
+  color = ~projeto
+) 
+
+p
+
+```
+
+
+```{r}
+p <- notas_com_diferencas %>% ggplot(aes(periodo,
+                        provas_praticas_vs_teoricas, 
+                        color=periodo,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+
+```{r}
+p <- notas_com_diferencas %>% ggplot(aes(periodo,
+                        provas_labs, 
+                        color=periodo,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+
+```{r}
+p <- notas_com_diferencas %>% ggplot(aes(periodo,
+                        provas_projeto, 
+                        color=periodo,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+
+
+```{r}
+p <- notas_com_diferencas %>% ggplot(aes(periodo,
+                        projeto_labs, 
+                        color=periodo,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+
+
+```{r}
+p <- notas_com_diferencas %>% ggplot(aes(elab_p1,
+                        prova_1, 
+                        color=elab_p1,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+
+```{r}
+p <- notas_com_diferencas %>% ggplot(aes(elab_p2,
+                        prova_2, 
+                        color=elab_p2,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+
+```{r}
+p <- notas_com_diferencas %>% ggplot(aes(elab_p3,
+                        prova_3, 
+                        color=elab_p3,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+
+```{r}
+p <- notas_com_diferencas %>% ggplot(aes(correcao_p1,
+                        prova_1, 
+                        color=correcao_p1,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+
+```{r}
+p <- notas_com_diferencas %>% ggplot(aes(correcao_p2,
+                        prova_2, 
+                        color=correcao_p2,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc() +
+             ggbeeswarm::geom_quasirandom(width = .4)
+            
+p
+```
+
+
+
+
+
+
+
+
