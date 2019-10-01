@@ -2,11 +2,20 @@
 title: "EDA"
 author: "Matheus Leal"
 date: "28 de setembro de 2019"
-output: html_document
+output:
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: github
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE,
+	             cache = FALSE,
+               prompt = FALSE,
+               tidy = FALSE,
+               comment = NA,
+               message = FALSE,
+               warning = FALSE)
 ```
 
 ```{r}
@@ -18,6 +27,7 @@ library(plotly)
 ```{r}
 notas_gerais <- read_csv("notas_gerais.csv")
 ```
+##Desempenho
 
 ```{r}
 notas_com_diferencas <- notas_gerais %>% 
@@ -27,211 +37,223 @@ notas_com_diferencas <- notas_gerais %>%
          provas_praticas_vs_teoricas = media_provas - p2)
 ```
 
-```{r echo=FALSE}
+```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
                         media_labs, 
-                        color=periodo,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
+                        fill = periodo)) +
+             scale_fill_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+             geom_violin(alpha = 0.5) +
+             geom_boxplot(width=0.1, fill="grey", color="white", alpha= 0.3)+
+             theme(legend.position = "top") +
+             labs(
+              x = NULL, y = "Desempenho", fill = NULL,
+              title = "Desempenho nos laboratórios",
+              subtitle = "Desempenho dos alunos nos laboratórios por período",
+              caption = ""
+             )
             
 p
 ```
-```{r echo=FALSE}
+```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
                         media_provas, 
-                        color=periodo,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
+                        fill = periodo)) +
+             scale_fill_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+             geom_violin(alpha = 0.5) +
+             geom_boxplot(width=0.1, fill="grey", color="white", alpha= 0.3)+
+             theme(legend.position = "top") +
+             labs(
+              x = NULL, y = "Desempenho", fill = NULL,
+              title = "Desempenho nas provas",
+              subtitle = "Desempenho dos alunos nas provas por período",
+              caption = ""
+             )
             
 p
 ```
-```{r echo=FALSE}
+
+```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
                         projeto, 
-                        color=periodo,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
+                        fill = periodo)) +
+             scale_fill_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+             geom_violin(alpha = 0.5) +
+             geom_boxplot(width=0.05, fill="grey", color="white", alpha= 0.3)+
+             theme(legend.position = "top") +
+             labs(
+              x = NULL, y = "Desempenho", fill = NULL,
+              title = "Desempenho no projeto",
+              subtitle = "Desempenho dos alunos no projeto por período",
+              caption = ""
+             )
             
 p
 ```
 
-```{r}
-p <- plot_ly(
-  notas_com_diferencas, x = ~media_provas, y = ~p2,
-  color = ~media_provas
-)
+##Relações
 
+```{r, fig.height=7, fig.width=9}
+p <- ggplot(notas_com_diferencas, aes(x=media_provas, y=p2)) +
+  geom_point() +
+  hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
+  labs(
+  x = "Média das provas práticas", y = "Média das provas teóricas", fill = NULL,
+  title = "Desempenho nas provas práticas vs teóricas"
+  )
+p
+
+```
+
+```{r, fig.height=7, fig.width=9}
+p <- ggplot(notas_com_diferencas, aes(x=media_provas, y=media_labs)) +
+  geom_point() +
+  hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
+  labs(
+  x = "Média dos laboratórios", y = "Média das provas", fill = NULL,
+  title = "Desempenho nas provas vs laboratórios"
+  )
 p
 
 ```
 
 
-```{r}
-p <- plot_ly(
-  notas_com_diferencas, x = ~media_provas, y = ~media_labs,
-  color = ~media_provas
-) 
-
+```{r, fig.height=7, fig.width=9}
+p <- ggplot(notas_com_diferencas, aes(x=media_provas, y=projeto)) +
+  geom_point() +
+  hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
+  labs(
+  x = "Média das provas", y = "Nota no projeto", fill = NULL,
+  title = "Desempenho nas provas vs projeto"
+  )
 p
 
 ```
 
 
-```{r}
-p <- plot_ly(
-  notas_com_diferencas, x = ~media_provas, y = ~projeto,
-  color = ~media_provas
-) 
+```{r, fig.height=7, fig.width=9}
+p <- ggplot(notas_com_diferencas, aes(x=media_labs, y=p2)) +
+  geom_point() +
+ theme(legend.position = "top") + 
+  hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
+  labs(
+  x = "Média nos laboratórios", y = "Média nas provas teóricas", fill = NULL,
+  title = "Desempenho nos laboratórios vs provas teóricas"
+  )
+p
 
+```
+
+```{r, fig.height=7, fig.width=9}
+p <- ggplot(notas_com_diferencas, aes(x=media_labs, y=projeto)) +
+  geom_point() +
+  hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
+               theme(legend.position = "top") +
+  labs(
+  x = "Média nos laboratórios", y = "Nota no projeto", fill = NULL,
+  title = "Desempenho nos laboratórios vs projeto"
+  )
 p
 
 ```
 
 
-```{r}
-p <- plot_ly(
-  notas_com_diferencas, x = ~media_labs, y = ~p2,
-  color = ~media_labs
-) 
-
+```{r, fig.height=7, fig.width=9}
+p <- ggplot(notas_com_diferencas, aes(x=p2 , y=projeto)) +
+  geom_point() +
+  hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
+  labs(
+  x = "Média das provas teóricas", y = "Nota no projeto", fill = NULL,
+  title = "Desempenho nas provas teóricas vs projeto"
+  )
 p
 
 ```
 
+### Correlograma
+
 ```{r}
-p <- plot_ly(
-  notas_com_diferencas, x = ~media_labs, y = ~projeto,
-  color = ~media_labs
-) 
-
-p
-
+library(corrplot)
+library(RColorBrewer)
+ 
+correlation_matrix <- cor(notas_com_diferencas %>% select(-id, -periodo, -professor, -elab_p1, -elab_p2, -elab_p3,
+                                                  -elab_repo, -correcao_p1, -correcao_p2, -correcao_p3,
+                                                  -correcao_repo))
+corrplot(correlation_matrix, method = "square", type = "upper", tl.col = "black", order = "hclust", col = brewer.pal(n = 5, name = "RdYlBu"))
 ```
 
 
-```{r}
-p <- plot_ly(
-  notas_com_diferencas, x = ~projeto, y = ~p2,
-  color = ~projeto
-) 
-
-p
-
-```
 
 
-```{r}
+##Diferença entre avaliações
+
+```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
                         provas_praticas_vs_teoricas, 
                         color=periodo,
                         label = "")) +
              scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+               theme(legend.position = "top") +
+             ggbeeswarm::geom_quasirandom(width = .4) +
+             labs(
+              x = NULL, y = NULL, fill = NULL,
+              title = "Provas práticas - provas teóricas"
+             )
             
 p
 ```
 
-```{r}
+```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
                         provas_labs, 
                         color=periodo,
                         label = "")) +
              scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+               theme(legend.position = "top") +
+             ggbeeswarm::geom_quasirandom(width = .4) +
+             labs(
+              x = NULL, y = NULL, fill = NULL,
+              title = "Provas práticas - laboratórios"
+             )
             
 p
 ```
 
-```{r}
+```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
                         provas_projeto, 
                         color=periodo,
                         label = "")) +
              scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+               theme(legend.position = "top") +
+             ggbeeswarm::geom_quasirandom(width = .4)+
+             labs(
+              x = NULL, y = NULL, fill = NULL,
+              title = "Provas práticas - projeto"
+             )
             
 p
 ```
 
 
-```{r}
+```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
                         projeto_labs, 
                         color=periodo,
                         label = "")) +
              scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
-            
-p
-```
-
-
-```{r}
-p <- notas_com_diferencas %>% ggplot(aes(elab_p1,
-                        prova_1, 
-                        color=elab_p1,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
-            
-p
-```
-
-```{r}
-p <- notas_com_diferencas %>% ggplot(aes(elab_p2,
-                        prova_2, 
-                        color=elab_p2,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
-            
-p
-```
-
-```{r}
-p <- notas_com_diferencas %>% ggplot(aes(elab_p3,
-                        prova_3, 
-                        color=elab_p3,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
-            
-p
-```
-
-```{r}
-p <- notas_com_diferencas %>% ggplot(aes(correcao_p1,
-                        prova_1, 
-                        color=correcao_p1,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
-            
-p
-```
-
-```{r}
-p <- notas_com_diferencas %>% ggplot(aes(correcao_p2,
-                        prova_2, 
-                        color=correcao_p2,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc() +
-             ggbeeswarm::geom_quasirandom(width = .4)
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+               theme(legend.position = "top") +
+             ggbeeswarm::geom_quasirandom(width = .4)+
+             labs(
+              x = NULL, y = NULL, fill = NULL,
+              title = "Projeto - labortatórios"
+             )
             
 p
 ```
