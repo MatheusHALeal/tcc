@@ -31,11 +31,11 @@ library(modelr)
 notas_gerais <- read_csv("notas_gerais.csv")
 ```
 
-Foi feita uma an·lise exploratÛria dos dados sobre o desempenho dos alunos da disciplina LaboratÛrio de ProgramaÁ„o II do Curso de CiÍncia da ComputaÁ„o da UFCG. S„o 441 observaÁıes, que se distribuem em 5 perÌodos letivos (2017.1 - 2019.1). Como cada perÌodo possuÌa um mÈtodo de avaliaÁ„o diferente, alguns com diferenÁas sutis, outros com diferenÁas mais expressivas, foi necess·rio, em determinados momentos, dividir nossa an·lise por perÌodo.
+Foi feita uma an√°lise explorat√≥ria dos dados sobre o desempenho dos alunos da disciplina Laborat√≥rio de Programa√ß√£o II do Curso de Ci√™ncia da Computa√ß√£o da UFCG. S√£o 441 observa√ß√µes, que se distribuem em 5 per√≠odos letivos (2017.1 - 2019.1). Como cada per√≠odo possu√≠a um m√©todo de avalia√ß√£o diferente, alguns com diferen√ßas sutis, outros com diferen√ßas mais expressivas, foi necess√°rio, em determinados momentos, dividir nossa an√°lise por per√≠odo.
 
 ##Desempenho
 
-O primeiro passo tomado foi analisar o desempenho das turmas nesses perÌodos para identificar discrep‚ncias e enxergar padrıes.
+O primeiro passo tomado foi analisar o desempenho das turmas nesses per√≠odos para identificar discrep√¢ncias e enxergar padr√µes.
 
 ```{r}
 notas_com_diferencas <- notas_gerais %>% 
@@ -45,14 +45,13 @@ notas_com_diferencas <- notas_gerais %>%
          provas_praticas_vs_teoricas = media_provas - p2)
 ```
 
-Consideramos nossa primeira medida a mÈdia parcial. Ela nos d· um overview do desempenho das turmas, pois considera todas a avaliaÁıes excluindo a avaliaÁ„o final.
+Consideramos nossa primeira medida a m√©dia parcial. Ela nos d√° um overview do desempenho das turmas, pois considera todas a avalia√ß√µes excluindo a avalia√ß√£o final.
 
 ```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
                         media_parcial, 
                         color=periodo,
                         label = "")) +
-
              scale_colour_brewer(palette="Set1") +
              hrbrthemes::theme_ipsum_rc(grid="X") +
                theme(legend.position = "top") +
@@ -64,13 +63,13 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
                         alpha = 0.8) +    
              labs(
               x = NULL, y = NULL, fill = NULL,
-              title = "MÈdia parcial"
+              title = "M√©dia parcial"
              )
             
 p
 ```
 
-Observando `media_parcial` vemos o perÌodo 2017.2 como aquele com o melhor desempenho mediano, onde, desde ent„o, o desempenho vem caindo, tendo o 2019.2 o menor dentre todos. Vamos destrinchar esse desempenho entre as principais atividades avaliativas: Provas, laboratÛrios e projeto.
+Observando `media_parcial` vemos o per√≠odo 2017.2 como aquele com o melhor desempenho mediano, onde, desde ent√£o, o desempenho vem caindo, tendo o 2019.2 o menor dentre todos. Vamos destrinchar esse desempenho entre as principais atividades avaliativas: Provas, laborat√≥rios e projeto.
 
 ```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
@@ -83,8 +82,8 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
              theme(legend.position = "top") +
              labs(
               x = NULL, y = "Desempenho", fill = NULL,
-              title = "Desempenho nos laboratÛrios",
-              subtitle = "Desempenho dos alunos nos laboratÛrios por perÌodo",
+              title = "Desempenho nos laborat√≥rios",
+              subtitle = "Desempenho dos alunos nos laborat√≥rios por per√≠odo",
               caption = ""
              )
             
@@ -103,7 +102,7 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
              labs(
               x = NULL, y = "Desempenho", fill = NULL,
               title = "Desempenho nas provas",
-              subtitle = "Desempenho dos alunos nas provas por perÌodo",
+              subtitle = "Desempenho dos alunos nas provas por per√≠odo",
               caption = ""
              )
             
@@ -122,23 +121,22 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
              labs(
               x = NULL, y = "Desempenho", fill = NULL,
               title = "Desempenho no projeto",
-              subtitle = "Desempenho dos alunos no projeto por perÌodo",
+              subtitle = "Desempenho dos alunos no projeto por per√≠odo",
               caption = ""
              )
             
 p
 ```
 
-##RelaÁıes
+##Rela√ß√µes
 
-Para investigarmos as relaÁıes entre as avaliaÁıes, primeiro vejamos o correlograma das vari·veis:
+Para investigarmos as rela√ß√µes entre as avalia√ß√µes, primeiro vejamos o correlograma das vari√°veis:
 
 ###Correlograma
 
 ```{r, fig.height=8, fig.width=10}
 numeric_notas_gerais <- notas_gerais %>%    select(-id, -periodo,-professor,-elab_p1,-elab_p2,-elab_p3,-elab_repo,
       -correcao_p1,-correcao_p2,-correcao_p3,-correcao_repo)
-
 corr <- cor(numeric_notas_gerais, use = "pairwise.complete.obs")
 ggcorr(numeric_notas_gerais,
     nbreaks = 10,
@@ -148,12 +146,11 @@ ggcorr(numeric_notas_gerais,
     hjust = 0.75,
     size = 4,
     color = "grey50")
-
 ```
 
-Primeiro, devemos considerar que as vari·veis `media_provas`, `media_labs`,  `media_parcial` e `media_final` s„o constituÌdas por outras vari·veis que tambÈm est„o no correlograma, portanto, n„o devemos levar em conta a correlaÁ„o entre essas:
+Primeiro, devemos considerar que as vari√°veis `media_provas`, `media_labs`,  `media_parcial` e `media_final` s√£o constitu√≠das por outras vari√°veis que tamb√©m est√£o no correlograma, portanto, n√£o devemos levar em conta a correla√ß√£o entre essas:
 
-ConstituiÁıes:
+Constitui√ß√µes:
 
 `media_provas`: `prova_1`, `prova_2`, `prova_3` e/ou `reposicao`. 
 
@@ -164,11 +161,11 @@ ConstituiÁıes:
 `media_final`: `media_parcial` e `prova_final`. 
 
 
-Tendo isso em mente, podemos destacar a correlaÁ„o entre `p2`, que representa a mÈdia das provas teÛricas, e as vari·veis que representam as provas pr·ticas, em especial `prova_3` (0.7681678), assim como a vari·vel composta delas `media_provas` (0.8130245). A vari·vel `minitestes` tem uma correlaÁ„o consideravelmente alta com quase todas as outras vari·veis, destacando-se `media_provas` (0.8503633). A `media_labs` possui correlaÁ„o entre 0.6 e 0.8 com diversas vari·veis, destacaremos com `minitestes` (0.7894896), pois a correlaÁ„o entre `minitestes` e `media_labs` deveria ser maior que `minitestes` e `media_provas`, tendo em vista que os minitestes e laboratÛrios s„o avaliaÁıes elaboradas para serem correspondentes. Por fim, a vari·vel `projeto` n„o mostra uma correlaÁ„o expressiva com nenhuma outra vari·vel.
+Tendo isso em mente, podemos destacar a correla√ß√£o entre `p2`, que representa a m√©dia das provas te√≥ricas, e as vari√°veis que representam as provas pr√°ticas, em especial `prova_3` (0.7681678), assim como a vari√°vel composta delas `media_provas` (0.8130245). A vari√°vel `minitestes` tem uma correla√ß√£o consideravelmente alta com quase todas as outras vari√°veis, destacando-se `media_provas` (0.8503633). A `media_labs` possui correla√ß√£o entre 0.6 e 0.8 com diversas vari√°veis, destacaremos com `minitestes` (0.7894896), pois a correla√ß√£o entre `minitestes` e `media_labs` deveria ser maior que `minitestes` e `media_provas`, tendo em vista que os minitestes e laborat√≥rios s√£o avalia√ß√µes elaboradas para serem correspondentes. Por fim, a vari√°vel `projeto` n√£o mostra uma correla√ß√£o expressiva com nenhuma outra vari√°vel.
 
 ###Se aprofundando
 
-Tendo estudado a matriz de correlaÁıes, nos aprofundamos naquela que se mostrou a informaÁ„o mais interessantes: Parece existir uma relaÁ„o entre a mÈdia das provas pr·ticas e a mÈdia das provas teÛricas. Lembrando que o correlograma foi construÌdo utilizando o mÈtodo de **pearson**. Caso tivÈssemos utilizado o mÈtodo de **spearman** - que utiliza ranks - para encontrar a correlaÁ„o entre as duas vari·vel, encontrarÌamos um resultado bem semelhante:
+Tendo estudado a matriz de correla√ß√µes, nos aprofundamos naquela que se mostrou a informa√ß√£o mais interessantes: Parece existir uma rela√ß√£o entre a m√©dia das provas pr√°ticas e a m√©dia das provas te√≥ricas. Lembrando que o correlograma foi constru√≠do utilizando o m√©todo de **pearson**. Caso tiv√©ssemos utilizado o m√©todo de **spearman** - que utiliza ranks - para encontrar a correla√ß√£o entre as duas vari√°vel, encontrar√≠amos um resultado bem semelhante:
 
 ```{r}
 notas_gerais %>% 
@@ -178,21 +175,20 @@ notas_gerais %>%
     spearman = cor(media_provas, p2, method = "spearman"))
 ```
 
-O gr·fico de dispers„o:
+O gr√°fico de dispers√£o:
 
 ```{r, fig.height=7, fig.width=9}
 p <- ggplot(notas_com_diferencas, aes(x=media_provas, y=p2)) +
   geom_point() +
   hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
   labs(
-  x = "MÈdia das provas pr·ticas", y = "MÈdia das provas teÛricas", fill = NULL,
-  title = "Desempenho nas provas pr·ticas vs teÛricas"
+  x = "M√©dia das provas pr√°ticas", y = "M√©dia das provas te√≥ricas", fill = NULL,
+  title = "Desempenho nas provas pr√°ticas vs te√≥ricas"
   )
 p
-
 ```
 
-Com a linha do modelo de regress„o linear simples:
+Com a linha do modelo de regress√£o linear simples:
 
 ```{r, fig.height=7, fig.width=9}
 p <- ggplot(notas_com_diferencas, aes(x=media_provas, y=p2)) +
@@ -200,11 +196,10 @@ p <- ggplot(notas_com_diferencas, aes(x=media_provas, y=p2)) +
   geom_smooth(method = "lm", se = FALSE) +
   hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
   labs(
-  x = "MÈdia das provas pr·ticas", y = "MÈdia das provas teÛricas", fill = NULL,
-  title = "Desempenho nas provas pr·ticas vs teÛricas"
+  x = "M√©dia das provas pr√°ticas", y = "M√©dia das provas te√≥ricas", fill = NULL,
+  title = "Desempenho nas provas pr√°ticas vs te√≥ricas"
   )
 p
-
 ```
 
 ###O modelo
@@ -212,16 +207,15 @@ p
 ```{r}
 mod <- lm(media_provas ~ p2, 
           data = notas_gerais)
-
 tidy(mod)
 ```
 ```{r}
 glance(mod)
 ```
 
-O formato do modelo encontrado foi: **media_provas** = 0.26 + 0.97***(p2)** que explica 66% da vari·vel resposta (R≤ = 0.6610089). 
+O formato do modelo encontrado foi: **media_provas** = 0.26 + 0.97***(p2)** que explica 66% da vari√°vel resposta (R¬≤ = 0.6610089). 
 
-Vejamos, ent„o, o que o modelo estima para cada ponto de media_provas.
+Vejamos, ent√£o, o que o modelo estima para cada ponto de media_provas.
 
 ```{r, fig.height=7, fig.width=9}
 notas_gerais %>% 
@@ -233,12 +227,12 @@ notas_gerais %>%
   geom_smooth(method = "lm", se = FALSE, color="red") +
   hrbrthemes::theme_ipsum_rc(grid=FALSE) +
   labs(
-  x = "MÈdia das provas pr·ticas", y = "MÈdia das provas teÛricas", fill = NULL,
+  x = "M√©dia das provas pr√°ticas", y = "M√©dia das provas te√≥ricas", fill = NULL,
   title = "O que o modelo estima para cada ponto em media_provas"
   )
 ```
 
-E o resÌduo do modelo:
+E o res√≠duo do modelo:
 
 ```{r, fig.height=7, fig.width=9}
 notas_gerais %>% 
@@ -248,14 +242,14 @@ notas_gerais %>%
   geom_hline(yintercept = 0, colour = "blue") +
   hrbrthemes::theme_ipsum_rc(grid=FALSE) +
   labs(
-  x = "MÈdia das provas pr·ticas", y = "ResÌduo", fill = NULL,
-  title = "ResÌduo do modelo"
+  x = "M√©dia das provas pr√°ticas", y = "Res√≠duo", fill = NULL,
+  title = "Res√≠duo do modelo"
   )
 ```
 
-##DiferenÁa entre avaliaÁıes
+##Diferen√ßa entre avalia√ß√µes
 
-As diferenÁas entre as avaliaÁ„o nos diz em qual avaliaÁ„o o aluno teve melhor resultado e o quanto. A partir dessas diferenÁas, podemos identificar alunos com notas muito discrepantes e em quais atividades isso ocorre.
+As diferen√ßas entre as avalia√ß√£o nos diz em qual avalia√ß√£o o aluno teve melhor resultado e o quanto. A partir dessas diferen√ßas, podemos identificar alunos com notas muito discrepantes e em quais atividades isso ocorre.
 
 ```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
@@ -268,7 +262,7 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
              ggbeeswarm::geom_quasirandom(width = .4) +
              labs(
               x = NULL, y = NULL, fill = NULL,
-              title = "Provas pr·ticas - provas teÛricas"
+              title = "Provas pr√°ticas - provas te√≥ricas"
              )
             
 p
@@ -285,7 +279,7 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
              ggbeeswarm::geom_quasirandom(width = .4) +
              labs(
               x = NULL, y = NULL, fill = NULL,
-              title = "Provas pr·ticas - laboratÛrios"
+              title = "Provas pr√°ticas - laborat√≥rios"
              )
             
 p
@@ -302,7 +296,7 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
              ggbeeswarm::geom_quasirandom(width = .4)+
              labs(
               x = NULL, y = NULL, fill = NULL,
-              title = "Provas pr·ticas - projeto"
+              title = "Provas pr√°ticas - projeto"
              )
             
 p
@@ -320,27 +314,27 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
              ggbeeswarm::geom_quasirandom(width = .4)+
              labs(
               x = NULL, y = NULL, fill = NULL,
-              title = "Projeto - labortatÛrios"
+              title = "Projeto - labortat√≥rios"
              )
             
 p
 ```
 
-Quanto mais distante de 0, maior a diferenÁa entre as avaliaÁıes. Podemos agora definir perfis a partir dessas diferenÁas.
+Quanto mais distante de 0, maior a diferen√ßa entre as avalia√ß√µes. Podemos agora definir perfis a partir dessas diferen√ßas.
 
 ##Agrupamento
 
 ### Between/totss
 
-Outra medida comumente usada no kmeans È _comparar a dist‚ncia (quadr·tica) entre o centro dos clusters e o centro dos dados com a dist‚ncia (quadr·tica) entre os pontos todos nos dados e o centro dos dados_. 
+Outra medida comumente usada no kmeans √© _comparar a dist√¢ncia (quadr√°tica) entre o centro dos clusters e o centro dos dados com a dist√¢ncia (quadr√°tica) entre os pontos todos nos dados e o centro dos dados_. 
 
-Quebrando essa ideia para ficar mais f·cil de entender: 
+Quebrando essa ideia para ficar mais f√°cil de entender: 
 
-Primeiro, o _centro dos dados_ È um ponto imagin·rio na mÈdia de todas as vari·veis. … um ponto que est· no meio dos dados. Em uma situaÁ„o onde cada ponto È um grupo (e os grupos s„o os mais coesos possÌveis), a soma das dist‚ncias dos grupos para o centro dos dados È igual ‡ soma da dist‚ncia dos pontos para o centro dos dados. Generalizando: se houver estrutura de grupos e ela estiver capturada pelo agrupamento, o somatÛrio da dist‚ncia do centro de cada grupo para o centro geral dos dados ser· um valor alto.
+Primeiro, o _centro dos dados_ √© um ponto imagin√°rio na m√©dia de todas as vari√°veis. √â um ponto que est√° no meio dos dados. Em uma situa√ß√£o onde cada ponto √© um grupo (e os grupos s√£o os mais coesos poss√≠veis), a soma das dist√¢ncias dos grupos para o centro dos dados √© igual √† soma da dist√¢ncia dos pontos para o centro dos dados. Generalizando: se houver estrutura de grupos e ela estiver capturada pelo agrupamento, o somat√≥rio da dist√¢ncia do centro de cada grupo para o centro geral dos dados ser√° um valor alto.
 
-Para medir para quais valores de `k` isso acontece, calculamos a _dist‚ncia do centro de cada cluster para o centro dos dados_ e multiplicamos pelo n˙mero de pontos nesse cluster. Somando esse valor para todos os clusters, temos `betweenss` abaixo. 
+Para medir para quais valores de `k` isso acontece, calculamos a _dist√¢ncia do centro de cada cluster para o centro dos dados_ e multiplicamos pelo n√∫mero de pontos nesse cluster. Somando esse valor para todos os clusters, temos `betweenss` abaixo. 
 
-Se esse valor for prÛximo do somatÛrio total das dist‚ncias dos pontos para o centro dos dados (`totss`), os pontos est„o prÛximos do centro de seu cluster. Essa proporÁ„o pode ser usada para definir um bom valor de `k`. Quando ela para de crescer, para de valer ‡ pena aumentar `k`.
+Se esse valor for pr√≥ximo do somat√≥rio total das dist√¢ncias dos pontos para o centro dos dados (`totss`), os pontos est√£o pr√≥ximos do centro de seu cluster. Essa propor√ß√£o pode ser usada para definir um bom valor de `k`. Quando ela para de crescer, para de valer √† pena aumentar `k`.
 
 
 ```{r}
@@ -359,24 +353,23 @@ explorando_k %>%
     hrbrthemes::theme_ipsum_rc() +
     labs(
       x = "K", y = "Betweenss/totss", fill = NULL,
-      title = "Provas pr·ticas - provas teÛricas"
+      title = "Provas pr√°ticas - provas te√≥ricas"
     )
 ```
 
-O bom valor de k parece ser 3, que vai ser o n˙mero de clusters para o nosso algoritmo de agrupamento.
+O bom valor de k parece ser 3, que vai ser o n√∫mero de clusters para o nosso algoritmo de agrupamento.
 
 ###K-means
 
 ```{r}
 n_clusters = 3
-
 km = difs %>% select(provas_praticas_vs_teoricas) %>%
     kmeans(centers = n_clusters, nstart = 20)
 agrupado = km %>% 
     augment(difs)
 ```
 
-O algoritmo nos da a seguinte distribuiÁ„o para os grupos:
+O algoritmo nos da a seguinte distribui√ß√£o para os grupos:
 
 ```{r, fig.height=7, fig.width=9}
 p <- agrupado %>% ggplot(aes(periodo,
@@ -389,11 +382,11 @@ p <- agrupado %>% ggplot(aes(periodo,
              ggbeeswarm::geom_quasirandom(width = .4) +
              labs(
               x = NULL, y = NULL, fill = NULL,
-              title = "Provas pr·ticas - provas teÛricas"
+              title = "Provas pr√°ticas - provas te√≥ricas"
              ) +
     labs(
       x = NULL, y = NULL, fill = NULL,
-      title = "Provas pr·ticas - provas teÛricas"
+      title = "Provas pr√°ticas - provas te√≥ricas"
     )
             
 p
@@ -415,22 +408,21 @@ explorando_k %>%
     hrbrthemes::theme_ipsum_rc() +
     labs(
       x = "K", y = "Betweenss/totss", fill = NULL,
-      title = "Provas pr·ticas - laboratÛrios"
+      title = "Provas pr√°ticas - laborat√≥rios"
     )
 ```
 
-O bom valor de k parece ser 4, que vai ser o n˙mero de clusters para o nosso algoritmo de agrupamento.
+O bom valor de k parece ser 4, que vai ser o n√∫mero de clusters para o nosso algoritmo de agrupamento.
 
 ```{r}
 n_clusters = 4
-
 km = difs %>% select(provas_labs) %>%
     kmeans(centers = n_clusters, nstart = 20)
 agrupado = km %>% 
     augment(difs)
 ```
 
-O algoritmo nos da a seguinte distribuiÁ„o para os grupos:
+O algoritmo nos da a seguinte distribui√ß√£o para os grupos:
 
 ```{r, fig.height=7, fig.width=9}
 p <- agrupado %>% ggplot(aes(periodo,
@@ -443,7 +435,7 @@ p <- agrupado %>% ggplot(aes(periodo,
              ggbeeswarm::geom_quasirandom(width = .4) +
              labs(
               x = NULL, y = NULL, fill = NULL,
-              title = "Provas pr·ticas - laboratÛrios"
+              title = "Provas pr√°ticas - laborat√≥rios"
              ) 
             
 p
@@ -467,22 +459,21 @@ explorando_k %>%
     hrbrthemes::theme_ipsum_rc() +
     labs(
       x = "K", y = "Betweenss/totss", fill = NULL,
-      title = "Projeto - laboratÛrios"
+      title = "Projeto - laborat√≥rios"
     )
 ```
 
-O bom valor de k parece ser 4, que vai ser o n˙mero de clusters para o nosso algoritmo de agrupamento.
+O bom valor de k parece ser 4, que vai ser o n√∫mero de clusters para o nosso algoritmo de agrupamento.
 
 ```{r}
 n_clusters = 4
-
 km = difs %>% select(projeto_labs) %>%
     kmeans(centers = n_clusters, nstart = 20)
 agrupado = km %>% 
     augment(difs)
 ```
 
-O algoritmo nos da a seguinte distribuiÁ„o para os grupos:
+O algoritmo nos da a seguinte distribui√ß√£o para os grupos:
 
 ```{r, fig.height=7, fig.width=9}
 p <- agrupado %>% ggplot(aes(periodo,
@@ -495,7 +486,7 @@ p <- agrupado %>% ggplot(aes(periodo,
              ggbeeswarm::geom_quasirandom(width = .4) +
              labs(
               x = NULL, y = NULL, fill = NULL,
-              title = "Projeto - laboratÛrios"
+              title = "Projeto - laborat√≥rios"
              ) 
             
 p
@@ -517,22 +508,21 @@ explorando_k %>%
     hrbrthemes::theme_ipsum_rc() +
     labs(
       x = "K", y = "Betweenss/totss", fill = NULL,
-      title = "Provas pr·ticas - projeto"
+      title = "Provas pr√°ticas - projeto"
     )
 ```
 
-O bom valor de k parece ser 4, que vai ser o n˙mero de clusters para o nosso algoritmo de agrupamento.
+O bom valor de k parece ser 4, que vai ser o n√∫mero de clusters para o nosso algoritmo de agrupamento.
 
 ```{r}
 n_clusters = 4
-
 km = difs %>% select(provas_projeto) %>%
     kmeans(centers = n_clusters, nstart = 20)
 agrupado = km %>% 
     augment(difs)
 ```
 
-O algoritmo nos da a seguinte distribuiÁ„o para os grupos:
+O algoritmo nos da a seguinte distribui√ß√£o para os grupos:
 
 ```{r, fig.height=7, fig.width=9}
 p <- agrupado %>% ggplot(aes(periodo,
@@ -545,12 +535,68 @@ p <- agrupado %>% ggplot(aes(periodo,
              ggbeeswarm::geom_quasirandom(width = .4) +
              labs(
               x = NULL, y = NULL, fill = NULL,
-              title = "Provas pr·ticas - projeto"
+              title = "Provas pr√°ticas - projeto"
              ) +
     labs(
       x = NULL, y = NULL, fill = NULL,
-      title = "Provas pr·ticas - projeto"
+      title = "Provas pr√°ticas - projeto"
     )
             
 p
+```
+
+```{r}
+difs <- notas_gerais %>% filter(periodo == "2018/2") %>% select(-id, -periodo,-professor,-elab_p1,-elab_p2,-elab_p3,-elab_repo,
+                                                                -media_labs, -media_provas, -media_parcial, -correcao_p1,-correcao_p2,
+                                                                -correcao_p3,-correcao_repo, - minitestes, -p2, -prova_final, -reposicao) %>% na.omit()
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>%
+    mutate(agrupamento = map(k, ~ kmeans(
+        select(difs, everything()),
+        centers = .
+    ) %>% glance())) %>%
+    unnest(agrupamento)
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    geom_point() +
+    hrbrthemes::theme_ipsum_rc() +
+    labs(
+      x = "K", y = "Betweenss/totss", fill = NULL,
+      title = "Provas pr√°ticas - projeto"
+    )
+```
+
+O bom valor de k parece ser 4, que vai ser o n√∫mero de clusters para o nosso algoritmo de agrupamento.
+
+```{r}
+n_clusters = 6
+km = difs %>% kmeans(centers = n_clusters, nstart = 20)
+agrupado = km %>% 
+    augment(difs)
+```
+
+
+```{r, fig.width=12, fig.height=10}
+evol <- agrupado %>% select(lab_1, lab_2, lab_3, prova_1, lab_4, lab_5, prova_2, prova_3, projeto, .cluster)
+ggparcoord(evol, columns = 1:8, mapping=aes(color=as.factor( .cluster))) + 
+  hrbrthemes::theme_ipsum_rc(grid="Y") +
+  scale_colour_brewer(palette="Set1") +
+  facet_wrap(. ~ .cluster, ncol=2)
+```
+
+```{r}
+n_clusters = 8
+km = difs %>% kmeans(centers = n_clusters, nstart = 20)
+agrupado = km %>% 
+    augment(difs)
+```
+
+
+```{r, fig.width=12, fig.height=10}
+evol <- agrupado %>% select(lab_1, lab_2, lab_3, prova_1, lab_4, lab_5, prova_2, prova_3, projeto, .cluster)
+ggparcoord(evol, columns = 1:8, mapping=aes(color=as.factor( .cluster))) + 
+  hrbrthemes::theme_ipsum_rc(grid="Y") +
+  scale_colour_brewer(palette="Set1") +
+  facet_wrap(. ~ .cluster, ncol=2)
 ```
