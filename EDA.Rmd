@@ -285,6 +285,89 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
 p
 ```
 
+Os laboratórios e as provas práticas são duas das principais atividades avaliativas da disciplina e, observando o gráfico da dispersão dessa diferença ao longo dos períodos, podemos notar que temos no 19.2 uma maior concentração em torno do 0, ou seja, os alunos estão tendo desempenho semelhante nas duas avaliações. Vejamos algumas medidas que podem nos ajudar a verificar se isso é verdade.
+
+```{r}
+desvio_padrao_periodos <- notas_com_diferencas %>% 
+  select(periodo, provas_labs) %>% 
+  na.omit() %>%
+  group_by(periodo) %>% 
+  summarise(desvio_padrao = sd(provas_labs), mediana = median(provas_labs), variancia = var(provas_labs))
+
+desvio_padrao_periodos
+
+```
+
+Os períodos 17.2 e 19.2 mostram uma maior semelhança no desempenho dos alunos para essas atividades. Se aprofundando um pouco mais na relação dessas avaliações, podemos calcular sua correlação, focando, agora, no último período, visto que possui o segundo desvio padrão mais baixo e é aquele com a metodologia de avaliação mais próxima da atual.
+
+```{r}
+notas_gerais %>% filter(periodo == "2019/1") %>% 
+  filter(!is.na(media_provas), !is.na(media_labs)) %>% 
+  summarise(
+    pearson = cor(media_provas, media_labs, method = "pearson"), 
+    spearman = cor(media_provas, media_labs, method = "spearman"))
+```
+
+Medidas semelhantes e relativamente mais altas quando consideramos o panorama geral.
+
+O gráfico de dispersão:
+
+```{r, fig.height=7, fig.width=9}
+p <- ggplot(notas_com_diferencas %>% filter(periodo == "2019/1"), aes(x=media_provas, y=media_labs)) +
+  geom_point() +
+  hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
+  labs(
+  x = "Média das provas práticas", y = "Média dos laboratórios", fill = NULL,
+  title = "Desempenho nas provas práticas vs laboratório"
+  )
+p
+```
+
+Com a linha do modelo de regressão linear simples:
+
+```{r, fig.height=7, fig.width=9}
+p <- ggplot(notas_com_diferencas %>% filter(periodo == "2019/1"), aes(x=media_provas, y=media_labs)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
+  labs(
+  x = "Média das provas práticas", y = "Média dos laboratórios", fill = NULL,
+  title = "Desempenho nas provas práticas vs laboratório"
+  )
+p
+```
+
+### O modelo
+
+```{r}
+mod <- lm(media_provas ~ media_labs, 
+          data = notas_com_diferencas %>% filter(periodo == "2019/1"))
+tidy(mod)
+```
+```{r}
+glance(mod)
+```
+
+O formato do modelo encontrado foi: **media_provas** = -0.297 + 0.9***(media_labs)** que explica 66% da variável resposta (R² = 0.664019). 
+
+O resíduo do modelo:
+
+```{r, fig.height=7, fig.width=9}
+notas_gerais %>% 
+  filter(periodo == "2019/1") %>% 
+  add_residuals(model = mod) %>% 
+  ggplot(aes(media_provas, resid)) + 
+  geom_point() + 
+  geom_hline(yintercept = 0, colour = "blue") +
+  hrbrthemes::theme_ipsum_rc(grid=FALSE) +
+  labs(
+  x = "Média das provas práticas", y = "Resíduo", fill = NULL,
+  title = "Resíduo do modelo"
+  )
+```
+
+Voltando para as demais distâncias:
+
 ```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
                         provas_projeto, 
@@ -301,7 +384,6 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
             
 p
 ```
-
 
 ```{r, fig.height=7, fig.width=9}
 p <- notas_com_diferencas %>% ggplot(aes(periodo,
@@ -392,6 +474,19 @@ p <- agrupado %>% ggplot(aes(periodo,
 p
 ```
 
+Algumas medidas para os grupos:
+
+```{r}
+desvio_padrao_grupos<- agrupado %>% 
+  select(.cluster, provas_praticas_vs_teoricas) %>% 
+  na.omit() %>%
+  group_by(.cluster) %>% 
+  summarise(desvio_padrao = sd(provas_praticas_vs_teoricas), mediana = median(provas_praticas_vs_teoricas), variancia = var(provas_praticas_vs_teoricas))
+
+desvio_padrao_grupos
+
+```
+
 ```{r}
 difs <- notas_com_diferencas %>% select(provas_labs, periodo) %>% na.omit()
 set.seed(123)
@@ -441,7 +536,20 @@ p <- agrupado %>% ggplot(aes(periodo,
 p
 ```
 
+Algumas medidas para os grupos:
 
+```{r}
+desvio_padrao_grupos<- agrupado %>% 
+  select(.cluster, provas_labs) %>% 
+  na.omit() %>%
+  group_by(.cluster) %>% 
+  summarise(desvio_padrao = sd(provas_labs), mediana = median(provas_labs), variancia = var(provas_labs))
+
+desvio_padrao_grupos
+
+```
+
+O grupo 1 possui uma mediana de -2.83, uma diferença de quase 3 pontos da media das provas práticas para a media dos laboratórios.
 
 ```{r}
 difs <- notas_com_diferencas %>% select(projeto_labs, periodo) %>% na.omit()
@@ -492,6 +600,20 @@ p <- agrupado %>% ggplot(aes(periodo,
 p
 ```
 
+Algumas medidas para os grupos:
+
+```{r}
+desvio_padrao_grupos<- agrupado %>% 
+  select(.cluster, projeto_labs) %>% 
+  na.omit() %>%
+  group_by(.cluster) %>% 
+  summarise(desvio_padrao = sd(projeto_labs), mediana = median(projeto_labs), variancia = var(projeto_labs))
+
+desvio_padrao_grupos
+
+```
+
+
 ```{r}
 difs <- notas_com_diferencas %>% select(provas_projeto, periodo) %>% na.omit()
 set.seed(123)
@@ -536,14 +658,27 @@ p <- agrupado %>% ggplot(aes(periodo,
              labs(
               x = NULL, y = NULL, fill = NULL,
               title = "Provas práticas - projeto"
-             ) +
-    labs(
-      x = NULL, y = NULL, fill = NULL,
-      title = "Provas práticas - projeto"
-    )
+             ) 
             
 p
 ```
+
+Algumas medidas para os grupos:
+
+```{r}
+desvio_padrao_grupos<- agrupado %>% 
+  select(.cluster, provas_projeto) %>% 
+  na.omit() %>%
+  group_by(.cluster) %>% 
+  summarise(desvio_padrao = sd(provas_projeto), mediana = median(provas_projeto), variancia = var(provas_projeto))
+
+desvio_padrao_grupos
+
+```
+
+##Evolução dos grupos 2018.2
+
+
 
 ```{r}
 difs <- notas_gerais %>% filter(periodo == "2018/2") %>% select(-id, -periodo,-professor,-elab_p1,-elab_p2,-elab_p3,-elab_repo,
@@ -563,8 +698,28 @@ explorando_k %>%
     hrbrthemes::theme_ipsum_rc() +
     labs(
       x = "K", y = "Betweenss/totss", fill = NULL,
-      title = "Provas práticas - projeto"
+      title = "Todas as avaliações"
     )
+```
+
+```{r}
+n_clusters = 4
+km = difs %>% kmeans(centers = n_clusters, nstart = 20)
+agrupado = km %>% 
+    augment(difs)
+```
+
+
+```{r, fig.width=12, fig.height=10}
+evol <- agrupado %>% select(lab_1, lab_2, lab_3, prova_1, lab_4, lab_5, prova_2, prova_3, projeto, .cluster)
+ggparcoord(evol, columns = 1:8, mapping=aes(color=as.factor( .cluster))) + 
+  hrbrthemes::theme_ipsum_rc(grid="Y") +
+  scale_colour_brewer(palette="Set1") +
+  facet_wrap(. ~ .cluster, ncol=2) +
+    labs(
+      x = "Avaliações", y = "Z-score", fill = NULL, legend = NULL,
+      title = "Evolução dos grupos de alunos na disciplina (4 grupos)"
+    ) + theme(legend.position="none")
 ```
 
 O bom valor de k parece ser 4, que vai ser o número de clusters para o nosso algoritmo de agrupamento.
@@ -582,7 +737,11 @@ evol <- agrupado %>% select(lab_1, lab_2, lab_3, prova_1, lab_4, lab_5, prova_2,
 ggparcoord(evol, columns = 1:8, mapping=aes(color=as.factor( .cluster))) + 
   hrbrthemes::theme_ipsum_rc(grid="Y") +
   scale_colour_brewer(palette="Set1") +
-  facet_wrap(. ~ .cluster, ncol=2)
+  facet_wrap(. ~ .cluster, ncol=2)  +
+    labs(
+      x = "Avaliações", y = "Z-score", fill = NULL, legend = NULL,
+      title = "Evolução dos grupos de alunos na disciplina (6 grupos)"
+    ) + theme(legend.position="none")
 ```
 
 ```{r}
@@ -598,5 +757,9 @@ evol <- agrupado %>% select(lab_1, lab_2, lab_3, prova_1, lab_4, lab_5, prova_2,
 ggparcoord(evol, columns = 1:8, mapping=aes(color=as.factor( .cluster))) + 
   hrbrthemes::theme_ipsum_rc(grid="Y") +
   scale_colour_brewer(palette="Set1") +
-  facet_wrap(. ~ .cluster, ncol=2)
+  facet_wrap(. ~ .cluster, ncol=2)  +
+    labs(
+      x = "Avaliações", y = "Z-score", fill = NULL, legend = NULL,
+      title = "Evolução dos grupos de alunos na disciplina (8 grupos)"
+    ) + theme(legend.position="none")
 ```
