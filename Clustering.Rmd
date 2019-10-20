@@ -1,0 +1,487 @@
+---
+title: "Clustering"
+author: "Matheus Leal"
+date: "20 de outubro de 2019"
+output:
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+	             cache = FALSE,
+               prompt = FALSE,
+               tidy = FALSE,
+               comment = NA,
+               message = FALSE,
+               warning = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(hrbrthemes)
+library(plotly)
+library(GGally)
+library(broom)
+library(modelr)
+library(knitr)
+library(foreign)
+library(stats)
+library(kableExtra)
+library(ggfortify)
+library(cluster)
+```
+
+```{r}
+notas_gerais <- read_csv("notas_gerais.csv")
+```
+
+
+```{r}
+notas_com_diferencas <- notas_gerais %>% 
+  mutate(provas_labs = media_provas - media_labs,
+         provas_projeto = media_provas - projeto,
+         projeto_labs = projeto - media_labs,
+         provas_praticas_vs_teoricas = media_provas - p2)
+```
+
+## Agrupamento
+
+### Between/totss
+
+Outra medida comumente usada no kmeans é _comparar a distância (quadrática) entre o centro dos clusters e o centro dos dados com a distância (quadrática) entre os pontos todos nos dados e o centro dos dados_. 
+
+Quebrando essa ideia para ficar mais fácil de entender: 
+
+Primeiro, o _centro dos dados_ é um ponto imaginário na média de todas as variáveis. É um ponto que está no meio dos dados. Em uma situação onde cada ponto é um grupo (e os grupos são os mais coesos possíveis), a soma das distâncias dos grupos para o centro dos dados é igual à soma da distância dos pontos para o centro dos dados. Generalizando: se houver estrutura de grupos e ela estiver capturada pelo agrupamento, o somatório da distância do centro de cada grupo para o centro geral dos dados será um valor alto.
+
+Para medir para quais valores de `k` isso acontece, calculamos a _distância do centro de cada cluster para o centro dos dados_ e multiplicamos pelo número de pontos nesse cluster. Somando esse valor para todos os clusters, temos `betweenss` abaixo. 
+
+Se esse valor for próximo do somatório total das distâncias dos pontos para o centro dos dados (`totss`), os pontos estão próximos do centro de seu cluster. Essa proporção pode ser usada para definir um bom valor de `k`. Quando ela para de crescer, para de valer à pena aumentar `k`.
+
+
+```{r}
+difs <- notas_com_diferencas %>% select(provas_praticas_vs_teoricas, periodo) %>% na.omit()
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>%
+    mutate(agrupamento = map(k, ~ kmeans(
+        select(difs, provas_praticas_vs_teoricas),
+        centers = .
+    ) %>% glance())) %>%
+    unnest(agrupamento)
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    geom_point() +
+    hrbrthemes::theme_ipsum_rc() +
+    labs(
+      x = "K", y = "Betweenss/totss", fill = NULL,
+      title = "Provas práticas - provas teóricas"
+    )
+```
+
+O bom valor de k parece ser 3, que vai ser o número de clusters para o nosso algoritmo de agrupamento.
+
+###K-means
+
+```{r}
+n_clusters = 3
+km = difs %>% select(provas_praticas_vs_teoricas) %>%
+    kmeans(centers = n_clusters, nstart = 20)
+agrupado = km %>% 
+    augment(difs)
+```
+
+O algoritmo nos da a seguinte distribuição para os grupos:
+
+```{r, fig.height=7, fig.width=9}
+p <- agrupado %>% ggplot(aes(periodo,
+                        provas_praticas_vs_teoricas, 
+                        color=.cluster,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+               theme(legend.position = "top") +
+             ggbeeswarm::geom_quasirandom(width = .4) +
+             labs(
+              x = NULL, y = NULL, fill = NULL,
+              title = "Provas práticas - provas teóricas"
+             ) +
+    labs(
+      x = NULL, y = NULL, fill = NULL,
+      title = "Provas práticas - provas teóricas"
+    )
+            
+p
+```
+
+Algumas medidas para os grupos:
+
+```{r}
+desvio_padrao_grupos<- agrupado %>% 
+  select(.cluster, provas_praticas_vs_teoricas) %>% 
+  na.omit() %>%
+  group_by(.cluster) %>% 
+  summarise(desvio_padrao = sd(provas_praticas_vs_teoricas), mediana = median(provas_praticas_vs_teoricas), variancia = var(provas_praticas_vs_teoricas))
+
+desvio_padrao_grupos
+
+```
+
+```{r}
+difs <- notas_com_diferencas %>% select(provas_labs, periodo) %>% na.omit()
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>%
+    mutate(agrupamento = map(k, ~ kmeans(
+        select(difs, provas_labs),
+        centers = .
+    ) %>% glance())) %>%
+    unnest(agrupamento)
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    geom_point() +
+    hrbrthemes::theme_ipsum_rc() +
+    labs(
+      x = "K", y = "Betweenss/totss", fill = NULL,
+      title = "Provas práticas - laboratórios"
+    )
+```
+
+O bom valor de k parece ser 4, que vai ser o número de clusters para o nosso algoritmo de agrupamento.
+
+```{r}
+n_clusters = 4
+km = difs %>% select(provas_labs) %>%
+    kmeans(centers = n_clusters, nstart = 20)
+agrupado = km %>% 
+    augment(difs)
+```
+
+O algoritmo nos da a seguinte distribuição para os grupos:
+
+```{r, fig.height=7, fig.width=9}
+p <- agrupado %>% ggplot(aes(periodo,
+                        provas_labs, 
+                        color=.cluster,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+               theme(legend.position = "top") +
+             ggbeeswarm::geom_quasirandom(width = .4) +
+             labs(
+              x = NULL, y = NULL, fill = NULL,
+              title = "Provas práticas - laboratórios"
+             ) 
+            
+p
+```
+
+Algumas medidas para os grupos:
+
+```{r}
+desvio_padrao_grupos<- agrupado %>% 
+  select(.cluster, provas_labs) %>% 
+  na.omit() %>%
+  group_by(.cluster) %>% 
+  summarise(desvio_padrao = sd(provas_labs), mediana = median(provas_labs), variancia = var(provas_labs))
+
+desvio_padrao_grupos
+
+```
+
+O grupo 1 possui uma mediana de -2.83, uma diferença de quase 3 pontos da media das provas práticas para a media dos laboratórios.
+
+```{r}
+difs <- notas_com_diferencas %>% select(projeto_labs, periodo) %>% na.omit()
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>%
+    mutate(agrupamento = map(k, ~ kmeans(
+        select(difs, projeto_labs),
+        centers = .
+    ) %>% glance())) %>%
+    unnest(agrupamento)
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    geom_point() +
+    hrbrthemes::theme_ipsum_rc() +
+    labs(
+      x = "K", y = "Betweenss/totss", fill = NULL,
+      title = "Projeto - laboratórios"
+    )
+```
+
+O bom valor de k parece ser 4, que vai ser o número de clusters para o nosso algoritmo de agrupamento.
+
+```{r}
+n_clusters = 4
+km = difs %>% select(projeto_labs) %>%
+    kmeans(centers = n_clusters, nstart = 20)
+agrupado = km %>% 
+    augment(difs)
+```
+
+O algoritmo nos da a seguinte distribuição para os grupos:
+
+```{r, fig.height=7, fig.width=9}
+p <- agrupado %>% ggplot(aes(periodo,
+                        projeto_labs, 
+                        color=.cluster,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+               theme(legend.position = "top") +
+             ggbeeswarm::geom_quasirandom(width = .4) +
+             labs(
+              x = NULL, y = NULL, fill = NULL,
+              title = "Projeto - laboratórios"
+             ) 
+            
+p
+```
+
+Algumas medidas para os grupos:
+
+```{r}
+desvio_padrao_grupos<- agrupado %>% 
+  select(.cluster, projeto_labs) %>% 
+  na.omit() %>%
+  group_by(.cluster) %>% 
+  summarise(desvio_padrao = sd(projeto_labs), mediana = median(projeto_labs), variancia = var(projeto_labs))
+
+desvio_padrao_grupos
+
+```
+
+
+```{r}
+difs <- notas_com_diferencas %>% select(provas_projeto, periodo) %>% na.omit()
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>%
+    mutate(agrupamento = map(k, ~ kmeans(
+        select(difs, provas_projeto),
+        centers = .
+    ) %>% glance())) %>%
+    unnest(agrupamento)
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    geom_point() +
+    hrbrthemes::theme_ipsum_rc() +
+    labs(
+      x = "K", y = "Betweenss/totss", fill = NULL,
+      title = "Provas práticas - projeto"
+    )
+```
+
+O bom valor de k parece ser 4, que vai ser o número de clusters para o nosso algoritmo de agrupamento.
+
+```{r}
+n_clusters = 4
+km = difs %>% select(provas_projeto) %>%
+    kmeans(centers = n_clusters, nstart = 20)
+agrupado = km %>% 
+    augment(difs)
+```
+
+O algoritmo nos da a seguinte distribuição para os grupos:
+
+```{r, fig.height=7, fig.width=9}
+p <- agrupado %>% ggplot(aes(periodo,
+                        provas_projeto, 
+                        color=.cluster,
+                        label = "")) +
+             scale_colour_brewer(palette="Set1") +
+             hrbrthemes::theme_ipsum_rc(grid="X") +
+               theme(legend.position = "top") +
+             ggbeeswarm::geom_quasirandom(width = .4) +
+             labs(
+              x = NULL, y = NULL, fill = NULL,
+              title = "Provas práticas - projeto"
+             ) 
+            
+p
+```
+
+Algumas medidas para os grupos:
+
+```{r}
+desvio_padrao_grupos<- agrupado %>% 
+  select(.cluster, provas_projeto) %>% 
+  na.omit() %>%
+  group_by(.cluster) %>% 
+  summarise(desvio_padrao = sd(provas_projeto), mediana = median(provas_projeto), variancia = var(provas_projeto))
+
+desvio_padrao_grupos
+
+```
+
+## Clusterizando com avaliações individuais
+
+
+
+### K-means
+
+```{r}
+difs <- notas_gerais %>%  mutate(primeira_prova = prova_1, ultima_prova = if_else(periodo == "2019/1", prova_2, prova_3))
+difs <- difs %>% select(lab_1, lab_2, lab_3, lab_4, lab_5, primeira_prova, ultima_prova, projeto) %>% na.omit()
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>%
+    mutate(agrupamento = map(k, ~ kmeans(
+        select(difs, everything()),
+        centers = .
+    ) %>% glance())) %>%
+    unnest(agrupamento)
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    geom_point() +
+    hrbrthemes::theme_ipsum_rc() +
+    labs(
+      x = "K", y = "Betweenss/totss", fill = NULL,
+      title = "Todas as avaliações"
+    )
+```
+
+```{r}
+n_clusters = 6
+km = difs %>% kmeans(centers = n_clusters, nstart = 20)
+agrupado = km %>% 
+    augment(difs)
+```
+
+
+```{r, fig.width=12, fig.height=10}
+evol <- agrupado %>% select(lab_1, lab_2, lab_3, primeira_prova, lab_4, lab_5, ultima_prova, projeto, .cluster)
+ggparcoord(evol, columns = 1:8, mapping=aes(color=as.factor( .cluster))) + 
+  hrbrthemes::theme_ipsum_rc(grid="Y") +
+  scale_colour_brewer(palette="Set1") +
+  facet_wrap(. ~ .cluster, ncol=2) +
+    labs(
+      x = "Avaliações", y = "Z-score", fill = NULL, legend = NULL,
+      title = "Evolução dos grupos de alunos na disciplina (6 grupos)"
+    ) + theme(legend.position="none")
+```
+
+
+### PCA
+
+```{r}
+difs.pca <- prcomp(difs)
+difs.pca.df <- data.frame(difs.pca$rotation)
+kable(difs.pca.df, format = 'html') %>%
+  kable_styling(bootstrap_options = c('hover', 'striped'))
+```
+
+```{r}
+autoplot(prcomp(difs)) + hrbrthemes::theme_ipsum_rc(grid=FALSE) + labs(title = "Distribuição")
+```
+
+### PCA + K-means
+
+```{r}
+set.seed(123)
+autoplot(kmeans(difs, 3), data = difs) + hrbrthemes::theme_ipsum_rc(grid=FALSE)  + labs(title = "K-means")
+```
+
+### PCA + Clara
+
+```{r}
+autoplot(clara(difs, 3)) + hrbrthemes::theme_ipsum_rc(grid=FALSE)  + labs(title = "Clara - Clustering Large Applications")
+```
+
+Clara: https://www.datanovia.com/en/lessons/clara-in-r-clustering-large-applications/
+
+
+### PCA + Fanny
+
+```{r}
+autoplot(fanny(difs, 3), frame = TRUE) + hrbrthemes::theme_ipsum_rc(grid=FALSE) + labs(title = "Fanny - Fuzzy Analysis Clustering")
+```
+
+Fanny: https://www.datanovia.com/en/lessons/fuzzy-clustering-essentials/
+
+
+### Clusterizando com médias
+
+### K-means
+
+```{r}
+difs <- notas_gerais %>% select(media_labs, media_provas, projeto) %>% na.omit()
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>%
+    mutate(agrupamento = map(k, ~ kmeans(
+        select(difs, everything()),
+        centers = .
+    ) %>% glance())) %>%
+    unnest(agrupamento)
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    geom_point() +
+    hrbrthemes::theme_ipsum_rc() +
+    labs(
+      x = "K", y = "Betweenss/totss", fill = NULL,
+      title = "Todas as avaliações"
+    )
+```
+
+```{r}
+n_clusters = 3
+km = difs %>% kmeans(centers = n_clusters, nstart = 20)
+agrupado = km %>% 
+    augment(difs)
+```
+
+
+```{r, fig.height=7, fig.width=9}
+p <- ggplot(agrupado, aes(x=media_provas, y=media_labs, color=.cluster, alpha=projeto)) +
+  geom_point() +
+  hrbrthemes::theme_ipsum_rc(grid=FALSE) + 
+  scale_colour_brewer(palette="Set1") +
+  labs(
+  x = "Média das provas práticas", y = "Média dos laboratórios", fill = NULL,
+  title = "Distribuição dos grupos", color ="Grupo", alpha="Nota no projeto"
+  )
+p
+```
+
+### PCA
+
+```{r}
+difs <- notas_gerais %>% select(media_labs, media_provas, projeto) %>%  na.omit()
+difs.pca <- prcomp(difs)
+difs.pca.df <- data.frame(difs.pca$rotation)
+kable(difs.pca.df, format = 'html') %>%
+  kable_styling(bootstrap_options = c('hover', 'striped'))
+```
+
+```{r}
+autoplot(prcomp(difs)) + hrbrthemes::theme_ipsum_rc(grid=FALSE) + labs(title = "Distribuição")
+```
+
+### PCA + K-means
+
+```{r}
+set.seed(123)
+autoplot(kmeans(difs, 3), data = difs) + hrbrthemes::theme_ipsum_rc(grid=FALSE)  + labs(title = "K-means")
+```
+
+### PCA + Clara
+
+```{r}
+autoplot(clara(difs, 3)) + hrbrthemes::theme_ipsum_rc(grid=FALSE)  + labs(title = "Clara - Clustering Large Applications")
+```
+
+Clara: https://www.datanovia.com/en/lessons/clara-in-r-clustering-large-applications/
+
+
+### PCA + Fanny
+
+```{r}
+autoplot(fanny(difs, 4), frame = TRUE) + hrbrthemes::theme_ipsum_rc(grid=FALSE) + labs(title = "Fanny - Fuzzy Analysis Clustering")
+```
+
+Fanny: https://www.datanovia.com/en/lessons/fuzzy-clustering-essentials/

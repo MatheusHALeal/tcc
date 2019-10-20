@@ -33,7 +33,7 @@ notas_gerais <- read_csv("notas_gerais.csv")
 
 Foi feita uma análise exploratória dos dados sobre o desempenho dos alunos da disciplina Laboratório de Programação II do Curso de Ciência da Computação da UFCG. São 441 observações, que se distribuem em 5 períodos letivos (2017.1 - 2019.1). Como cada período possuía um método de avaliação diferente, alguns com diferenças sutis, outros com diferenças mais expressivas, foi necessário, em determinados momentos, dividir nossa análise por período.
 
-##Desempenho
+## Desempenho
 
 O primeiro passo tomado foi analisar o desempenho das turmas nesses períodos para identificar discrepâncias e enxergar padrões.
 
@@ -128,11 +128,11 @@ p <- notas_com_diferencas %>% ggplot(aes(periodo,
 p
 ```
 
-##Relações
+## Relações
 
 Para investigarmos as relações entre as avaliações, primeiro vejamos o correlograma das variáveis:
 
-###Correlograma
+### Correlograma
 
 ```{r, fig.height=8, fig.width=10}
 numeric_notas_gerais <- notas_gerais %>%    select(-id, -periodo,-professor,-elab_p1,-elab_p2,-elab_p3,-elab_repo,
@@ -163,7 +163,7 @@ Constituições:
 
 Tendo isso em mente, podemos destacar a correlação entre `p2`, que representa a média das provas teóricas, e as variáveis que representam as provas práticas, em especial `prova_3` (0.7681678), assim como a variável composta delas `media_provas` (0.8130245). A variável `minitestes` tem uma correlação consideravelmente alta com quase todas as outras variáveis, destacando-se `media_provas` (0.8503633). A `media_labs` possui correlação entre 0.6 e 0.8 com diversas variáveis, destacaremos com `minitestes` (0.7894896), pois a correlação entre `minitestes` e `media_labs` deveria ser maior que `minitestes` e `media_provas`, tendo em vista que os minitestes e laboratórios são avaliações elaboradas para serem correspondentes. Por fim, a variável `projeto` não mostra uma correlação expressiva com nenhuma outra variável.
 
-###Se aprofundando
+### Se aprofundando
 
 Tendo estudado a matriz de correlações, nos aprofundamos naquela que se mostrou a informação mais interessantes: Parece existir uma relação entre a média das provas práticas e a média das provas teóricas. Lembrando que o correlograma foi construído utilizando o método de **pearson**. Caso tivéssemos utilizado o método de **spearman** - que utiliza ranks - para encontrar a correlação entre as duas variável, encontraríamos um resultado bem semelhante:
 
@@ -202,7 +202,7 @@ p <- ggplot(notas_com_diferencas, aes(x=media_provas, y=p2)) +
 p
 ```
 
-###O modelo
+### O modelo
 
 ```{r}
 mod <- lm(media_provas ~ p2, 
@@ -247,7 +247,7 @@ notas_gerais %>%
   )
 ```
 
-##Diferença entre avaliações
+## Diferença entre avaliações
 
 As diferenças entre as avaliação nos diz em qual avaliação o aluno teve melhor resultado e o quanto. A partir dessas diferenças, podemos identificar alunos com notas muito discrepantes e em quais atividades isso ocorre.
 
@@ -404,362 +404,4 @@ p
 
 Quanto mais distante de 0, maior a diferença entre as avaliações. Podemos agora definir perfis a partir dessas diferenças.
 
-##Agrupamento
 
-### Between/totss
-
-Outra medida comumente usada no kmeans é _comparar a distância (quadrática) entre o centro dos clusters e o centro dos dados com a distância (quadrática) entre os pontos todos nos dados e o centro dos dados_. 
-
-Quebrando essa ideia para ficar mais fácil de entender: 
-
-Primeiro, o _centro dos dados_ é um ponto imaginário na média de todas as variáveis. É um ponto que está no meio dos dados. Em uma situação onde cada ponto é um grupo (e os grupos são os mais coesos possíveis), a soma das distâncias dos grupos para o centro dos dados é igual à soma da distância dos pontos para o centro dos dados. Generalizando: se houver estrutura de grupos e ela estiver capturada pelo agrupamento, o somatório da distância do centro de cada grupo para o centro geral dos dados será um valor alto.
-
-Para medir para quais valores de `k` isso acontece, calculamos a _distância do centro de cada cluster para o centro dos dados_ e multiplicamos pelo número de pontos nesse cluster. Somando esse valor para todos os clusters, temos `betweenss` abaixo. 
-
-Se esse valor for próximo do somatório total das distâncias dos pontos para o centro dos dados (`totss`), os pontos estão próximos do centro de seu cluster. Essa proporção pode ser usada para definir um bom valor de `k`. Quando ela para de crescer, para de valer à pena aumentar `k`.
-
-
-```{r}
-difs <- notas_com_diferencas %>% select(provas_praticas_vs_teoricas, periodo) %>% na.omit()
-set.seed(123)
-explorando_k = tibble(k = 1:15) %>%
-    mutate(agrupamento = map(k, ~ kmeans(
-        select(difs, provas_praticas_vs_teoricas),
-        centers = .
-    ) %>% glance())) %>%
-    unnest(agrupamento)
-explorando_k %>% 
-    ggplot(aes(x = k, y = betweenss / totss)) + 
-    geom_line() + 
-    geom_point() +
-    hrbrthemes::theme_ipsum_rc() +
-    labs(
-      x = "K", y = "Betweenss/totss", fill = NULL,
-      title = "Provas práticas - provas teóricas"
-    )
-```
-
-O bom valor de k parece ser 3, que vai ser o número de clusters para o nosso algoritmo de agrupamento.
-
-###K-means
-
-```{r}
-n_clusters = 3
-km = difs %>% select(provas_praticas_vs_teoricas) %>%
-    kmeans(centers = n_clusters, nstart = 20)
-agrupado = km %>% 
-    augment(difs)
-```
-
-O algoritmo nos da a seguinte distribuição para os grupos:
-
-```{r, fig.height=7, fig.width=9}
-p <- agrupado %>% ggplot(aes(periodo,
-                        provas_praticas_vs_teoricas, 
-                        color=.cluster,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc(grid="X") +
-               theme(legend.position = "top") +
-             ggbeeswarm::geom_quasirandom(width = .4) +
-             labs(
-              x = NULL, y = NULL, fill = NULL,
-              title = "Provas práticas - provas teóricas"
-             ) +
-    labs(
-      x = NULL, y = NULL, fill = NULL,
-      title = "Provas práticas - provas teóricas"
-    )
-            
-p
-```
-
-Algumas medidas para os grupos:
-
-```{r}
-desvio_padrao_grupos<- agrupado %>% 
-  select(.cluster, provas_praticas_vs_teoricas) %>% 
-  na.omit() %>%
-  group_by(.cluster) %>% 
-  summarise(desvio_padrao = sd(provas_praticas_vs_teoricas), mediana = median(provas_praticas_vs_teoricas), variancia = var(provas_praticas_vs_teoricas))
-
-desvio_padrao_grupos
-
-```
-
-```{r}
-difs <- notas_com_diferencas %>% select(provas_labs, periodo) %>% na.omit()
-set.seed(123)
-explorando_k = tibble(k = 1:15) %>%
-    mutate(agrupamento = map(k, ~ kmeans(
-        select(difs, provas_labs),
-        centers = .
-    ) %>% glance())) %>%
-    unnest(agrupamento)
-explorando_k %>% 
-    ggplot(aes(x = k, y = betweenss / totss)) + 
-    geom_line() + 
-    geom_point() +
-    hrbrthemes::theme_ipsum_rc() +
-    labs(
-      x = "K", y = "Betweenss/totss", fill = NULL,
-      title = "Provas práticas - laboratórios"
-    )
-```
-
-O bom valor de k parece ser 4, que vai ser o número de clusters para o nosso algoritmo de agrupamento.
-
-```{r}
-n_clusters = 4
-km = difs %>% select(provas_labs) %>%
-    kmeans(centers = n_clusters, nstart = 20)
-agrupado = km %>% 
-    augment(difs)
-```
-
-O algoritmo nos da a seguinte distribuição para os grupos:
-
-```{r, fig.height=7, fig.width=9}
-p <- agrupado %>% ggplot(aes(periodo,
-                        provas_labs, 
-                        color=.cluster,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc(grid="X") +
-               theme(legend.position = "top") +
-             ggbeeswarm::geom_quasirandom(width = .4) +
-             labs(
-              x = NULL, y = NULL, fill = NULL,
-              title = "Provas práticas - laboratórios"
-             ) 
-            
-p
-```
-
-Algumas medidas para os grupos:
-
-```{r}
-desvio_padrao_grupos<- agrupado %>% 
-  select(.cluster, provas_labs) %>% 
-  na.omit() %>%
-  group_by(.cluster) %>% 
-  summarise(desvio_padrao = sd(provas_labs), mediana = median(provas_labs), variancia = var(provas_labs))
-
-desvio_padrao_grupos
-
-```
-
-O grupo 1 possui uma mediana de -2.83, uma diferença de quase 3 pontos da media das provas práticas para a media dos laboratórios.
-
-```{r}
-difs <- notas_com_diferencas %>% select(projeto_labs, periodo) %>% na.omit()
-set.seed(123)
-explorando_k = tibble(k = 1:15) %>%
-    mutate(agrupamento = map(k, ~ kmeans(
-        select(difs, projeto_labs),
-        centers = .
-    ) %>% glance())) %>%
-    unnest(agrupamento)
-explorando_k %>% 
-    ggplot(aes(x = k, y = betweenss / totss)) + 
-    geom_line() + 
-    geom_point() +
-    hrbrthemes::theme_ipsum_rc() +
-    labs(
-      x = "K", y = "Betweenss/totss", fill = NULL,
-      title = "Projeto - laboratórios"
-    )
-```
-
-O bom valor de k parece ser 4, que vai ser o número de clusters para o nosso algoritmo de agrupamento.
-
-```{r}
-n_clusters = 4
-km = difs %>% select(projeto_labs) %>%
-    kmeans(centers = n_clusters, nstart = 20)
-agrupado = km %>% 
-    augment(difs)
-```
-
-O algoritmo nos da a seguinte distribuição para os grupos:
-
-```{r, fig.height=7, fig.width=9}
-p <- agrupado %>% ggplot(aes(periodo,
-                        projeto_labs, 
-                        color=.cluster,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc(grid="X") +
-               theme(legend.position = "top") +
-             ggbeeswarm::geom_quasirandom(width = .4) +
-             labs(
-              x = NULL, y = NULL, fill = NULL,
-              title = "Projeto - laboratórios"
-             ) 
-            
-p
-```
-
-Algumas medidas para os grupos:
-
-```{r}
-desvio_padrao_grupos<- agrupado %>% 
-  select(.cluster, projeto_labs) %>% 
-  na.omit() %>%
-  group_by(.cluster) %>% 
-  summarise(desvio_padrao = sd(projeto_labs), mediana = median(projeto_labs), variancia = var(projeto_labs))
-
-desvio_padrao_grupos
-
-```
-
-
-```{r}
-difs <- notas_com_diferencas %>% select(provas_projeto, periodo) %>% na.omit()
-set.seed(123)
-explorando_k = tibble(k = 1:15) %>%
-    mutate(agrupamento = map(k, ~ kmeans(
-        select(difs, provas_projeto),
-        centers = .
-    ) %>% glance())) %>%
-    unnest(agrupamento)
-explorando_k %>% 
-    ggplot(aes(x = k, y = betweenss / totss)) + 
-    geom_line() + 
-    geom_point() +
-    hrbrthemes::theme_ipsum_rc() +
-    labs(
-      x = "K", y = "Betweenss/totss", fill = NULL,
-      title = "Provas práticas - projeto"
-    )
-```
-
-O bom valor de k parece ser 4, que vai ser o número de clusters para o nosso algoritmo de agrupamento.
-
-```{r}
-n_clusters = 4
-km = difs %>% select(provas_projeto) %>%
-    kmeans(centers = n_clusters, nstart = 20)
-agrupado = km %>% 
-    augment(difs)
-```
-
-O algoritmo nos da a seguinte distribuição para os grupos:
-
-```{r, fig.height=7, fig.width=9}
-p <- agrupado %>% ggplot(aes(periodo,
-                        provas_projeto, 
-                        color=.cluster,
-                        label = "")) +
-             scale_colour_brewer(palette="Set1") +
-             hrbrthemes::theme_ipsum_rc(grid="X") +
-               theme(legend.position = "top") +
-             ggbeeswarm::geom_quasirandom(width = .4) +
-             labs(
-              x = NULL, y = NULL, fill = NULL,
-              title = "Provas práticas - projeto"
-             ) 
-            
-p
-```
-
-Algumas medidas para os grupos:
-
-```{r}
-desvio_padrao_grupos<- agrupado %>% 
-  select(.cluster, provas_projeto) %>% 
-  na.omit() %>%
-  group_by(.cluster) %>% 
-  summarise(desvio_padrao = sd(provas_projeto), mediana = median(provas_projeto), variancia = var(provas_projeto))
-
-desvio_padrao_grupos
-
-```
-
-##Evolução dos grupos 2018.2
-
-
-
-```{r}
-difs <- notas_gerais %>% filter(periodo == "2018/2") %>% select(-id, -periodo,-professor,-elab_p1,-elab_p2,-elab_p3,-elab_repo,
-                                                                -media_labs, -media_provas, -media_parcial, -correcao_p1,-correcao_p2,
-                                                                -correcao_p3,-correcao_repo, - minitestes, -p2, -prova_final, -reposicao) %>% na.omit()
-set.seed(123)
-explorando_k = tibble(k = 1:15) %>%
-    mutate(agrupamento = map(k, ~ kmeans(
-        select(difs, everything()),
-        centers = .
-    ) %>% glance())) %>%
-    unnest(agrupamento)
-explorando_k %>% 
-    ggplot(aes(x = k, y = betweenss / totss)) + 
-    geom_line() + 
-    geom_point() +
-    hrbrthemes::theme_ipsum_rc() +
-    labs(
-      x = "K", y = "Betweenss/totss", fill = NULL,
-      title = "Todas as avaliações"
-    )
-```
-
-```{r}
-n_clusters = 4
-km = difs %>% kmeans(centers = n_clusters, nstart = 20)
-agrupado = km %>% 
-    augment(difs)
-```
-
-
-```{r, fig.width=12, fig.height=10}
-evol <- agrupado %>% select(lab_1, lab_2, lab_3, prova_1, lab_4, lab_5, prova_2, prova_3, projeto, .cluster)
-ggparcoord(evol, columns = 1:8, mapping=aes(color=as.factor( .cluster))) + 
-  hrbrthemes::theme_ipsum_rc(grid="Y") +
-  scale_colour_brewer(palette="Set1") +
-  facet_wrap(. ~ .cluster, ncol=2) +
-    labs(
-      x = "Avaliações", y = "Z-score", fill = NULL, legend = NULL,
-      title = "Evolução dos grupos de alunos na disciplina (4 grupos)"
-    ) + theme(legend.position="none")
-```
-
-O bom valor de k parece ser 4, que vai ser o número de clusters para o nosso algoritmo de agrupamento.
-
-```{r}
-n_clusters = 6
-km = difs %>% kmeans(centers = n_clusters, nstart = 20)
-agrupado = km %>% 
-    augment(difs)
-```
-
-
-```{r, fig.width=12, fig.height=10}
-evol <- agrupado %>% select(lab_1, lab_2, lab_3, prova_1, lab_4, lab_5, prova_2, prova_3, projeto, .cluster)
-ggparcoord(evol, columns = 1:8, mapping=aes(color=as.factor( .cluster))) + 
-  hrbrthemes::theme_ipsum_rc(grid="Y") +
-  scale_colour_brewer(palette="Set1") +
-  facet_wrap(. ~ .cluster, ncol=2)  +
-    labs(
-      x = "Avaliações", y = "Z-score", fill = NULL, legend = NULL,
-      title = "Evolução dos grupos de alunos na disciplina (6 grupos)"
-    ) + theme(legend.position="none")
-```
-
-```{r}
-n_clusters = 8
-km = difs %>% kmeans(centers = n_clusters, nstart = 20)
-agrupado = km %>% 
-    augment(difs)
-```
-
-
-```{r, fig.width=12, fig.height=10}
-evol <- agrupado %>% select(lab_1, lab_2, lab_3, prova_1, lab_4, lab_5, prova_2, prova_3, projeto, .cluster)
-ggparcoord(evol, columns = 1:8, mapping=aes(color=as.factor( .cluster))) + 
-  hrbrthemes::theme_ipsum_rc(grid="Y") +
-  scale_colour_brewer(palette="Set1") +
-  facet_wrap(. ~ .cluster, ncol=2)  +
-    labs(
-      x = "Avaliações", y = "Z-score", fill = NULL, legend = NULL,
-      title = "Evolução dos grupos de alunos na disciplina (8 grupos)"
-    ) + theme(legend.position="none")
-```
