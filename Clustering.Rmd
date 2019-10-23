@@ -326,11 +326,12 @@ desvio_padrao_grupos
 
 ```{r}
 difs <- notas_gerais %>%  mutate(primeira_prova = prova_1, ultima_prova = if_else(periodo == "2019/1", prova_2, prova_3))
-difs <- difs %>% select(lab_1, lab_2, lab_3, lab_4, lab_5, primeira_prova, ultima_prova, projeto) %>% na.omit()
+difs <- difs %>% select(lab_2, lab_3, lab_4, lab_5, primeira_prova, ultima_prova, projeto, media_parcial) %>% na.omit()
+sem_media <- difs %>% select(-media_parcial)
 set.seed(123)
 explorando_k = tibble(k = 1:15) %>%
     mutate(agrupamento = map(k, ~ kmeans(
-        select(difs, everything()),
+        select(sem_media , everything()),
         centers = .
     ) %>% glance())) %>%
     unnest(agrupamento)
@@ -346,23 +347,23 @@ explorando_k %>%
 ```
 
 ```{r}
-n_clusters = 6
-km = difs %>% kmeans(centers = n_clusters, nstart = 20)
+n_clusters = 8
+km = sem_media %>% kmeans(centers = n_clusters, nstart = 25)
 agrupado = km %>% 
     augment(difs)
 ```
 
 
 ```{r, fig.width=12, fig.height=10}
-evol <- agrupado %>% select(lab_1, lab_2, lab_3, primeira_prova, lab_4, lab_5, ultima_prova, projeto, .cluster)
-ggparcoord(evol, columns = 1:8, mapping=aes(color=as.factor( .cluster))) + 
+evol <- agrupado %>% select(lab_2, lab_3, primeira_prova, lab_4, lab_5, ultima_prova, projeto, .cluster)
+ggparcoord(evol, columns = 1:7, mapping=aes(color=as.factor( .cluster))) + 
   hrbrthemes::theme_ipsum_rc(grid="Y") +
   scale_colour_brewer(palette="Set1") +
   facet_wrap(. ~ .cluster, ncol=2) +
     labs(
       x = "Avaliações", y = "Z-score", fill = NULL, legend = NULL,
-      title = "Evolução dos grupos de alunos na disciplina (6 grupos)"
-    ) + theme(legend.position="none")
+      title = "Evolução dos grupos de alunos na disciplina (8 grupos)"
+    ) + theme(legend.position="none", axis.text.x = element_text(angle = 45))
 ```
 
 
